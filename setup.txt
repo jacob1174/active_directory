@@ -1,0 +1,67 @@
+**Active Directory Setup
+
+* Install VMs
+	-Install Windows Server 2022 as a Virtual Machine
+	-Install Windows 11 as a Virtual Machine
+		-Change Regedit
+			-Add 'LabConfig' in Computer\HKEY_LOCAL_MACHINE\SYSTEM\Setup
+			-Add the following DWORDs and change value to '1'
+				-BypassTPMCheck
+				-BypassSecureBootCheck
+				-BypassRAMCheck
+
+* Install either VMWare Tools (VMT) or VirtualBox Guest Additions (VGA)
+	-Ensure the VMT or VGA is loaded into D: drive
+	-Open D: drive and run the appropriate setup executable.
+
+* Set up Host Name and Static IP address on Domain Controller
+	-Change Host Name.
+		-Type 'Sconfig' on the command line.
+		-Change Host Name to what you desire.
+		-The Domain Controller will restart at this point.
+	-Change IP Address to Static IP Address.
+		-Type 'ipconfig /all' command to know about your server IP address.
+		-Type 'Sconfig' on the command line.
+		-Type 8 and then hit enter.
+		-Check how many network adapters are available, type 1, and then press enter.
+		-S for static IP address.
+		-Type the details and then press enter.
+	-Set DNS server and then press enter.
+		-Set the DNS server address to the static IP address.
+
+* Enable PSRemoting on both Domain Controller and Trusted Host Client
+	-Type 'Enable-PSRemoting' on command line in Powershell on the Domain Controller.
+	-Find Ip Address of Domain Controller.
+	-Enter on the Power Shell command line on the Trusted Host Client 'Start-Service WinRM'.
+	-Add Domain Controller IP Address to Trusted Host Client.
+		-Enter on Power Shell Command line on Trusted Host 'get-item wsman:\localhost\Client\TrustedHosts'
+			-If the response is negative, you'll need to set the Trusted Host.
+			-Set the Trusted Host by entering set-item wsman:\localhost\Client\TrustedHosts -value <Domain IP Address>.
+	-Enter on the command line on the Trusted Host 'New-PSSession -ComputerName <Domain IP Address> -Credential (Get-Credential)'.
+	-Now enter on the Trusted Host 'Enter-PSSession <ID>' where <ID> is the result from the previous command.
+
+* Install Active Directory on Domain Controller
+	-Type 'Install-WindowsFeature AD-Domain-Services -IncludeManagementTools' on Domain Controller command line.
+	-Domain Services will install and restart the Domain Controller.
+
+* Configure Active Directory Windows Server 2022 Core
+	-Type 'Import-Module ADDSDeployment' on Domain Controller command line.
+	-Type 'Install-ADDSForest'
+		-Set the Domain Name i.e., 'xyz.local'
+		-Set Safemode Password.
+	-Active Directory has been installed but the DNS Server will have been changed to a local loop, i.e; 127.0.0.1.  The DNS server will need to be changed to the IP Address
+	as previously changed.
+		-Type 'ipconfig /all'.  This will reveal the Interface Index which will need to be changed.
+		-Type 'Set-DnsClientServerAddress -InterfaceIndex <Interface Index> -ServerAddresses <Static IP Address>' will change DNS Address.
+
+* Setup Workstation
+	-Clone a workstation.
+	-Type 'Get-NetIPAddress' on workstation command line.  This will identify the workstation IP address and Interface Index.
+	-Type 'Get-DnsClientServerAddress' on workstation command line.  This will identify the DNS address the workstation is set.
+		-Type 'Set-DnsClientServerAddress' on the workstation command line if DNS IP address is not set to Domain Controller DNS.  Verify the DNS is set to Domain Controller DNS address.
+	-Type 'add-computer –domainname <domain name> -Credential <domain name\Administrator> -restart –force'.  This will add the workstation to domain controller and restart workstation.
+
+Web sites:
+https://xpertstec.com/how-to-install-active-directory-windows-server-core-2022              
+https://itluke.online/2018/04/27/how-to-change-a-static-ip-address-with-powershell/
+https://petri.com/add-computer-to-domain-powershell/
