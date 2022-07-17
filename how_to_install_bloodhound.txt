@@ -1,0 +1,98 @@
+Linux
+
+1.  Install Java
+		Update your apt sources with this command:
+		
+		echo "deb http://httpredir.debian.org/debian stretch-backports main" | sudo tee -a /etc/apt/sources.list.d/stretch-backports.list
+		
+		Run apt-get update:
+		
+		sudo apt-get update
+
+neo4j will now automatically pull from that repo when it needs to install Java as part of its install processs
+
+2.  Install neo4j
+		Add the neo4j repo to your apt sources:
+
+			wget -O - https://debian.neo4j.com/neotechnology.gpg.key | sudo apt-key add -
+			echo 'deb https://debian.neo4j.com stable 4.0' > /etc/apt/sources.list.d/neo4j.list
+
+			sudo apt-get update
+
+		Install apt-transport-https with apt
+
+			sudo apt-get install apt-transport-https
+
+		Install neo4j community edition using apt:
+
+			sudo apt-get install neo4j
+
+		Start neo4j to be used to in the foreground:
+
+			sudo neo4j console
+
+3.  Split the console.
+
+4.  Download the BloodHound GUI
+
+		Download the latest version of the BloodHound GUI from https://github.com/BloodHoundAD/BloodHound/releases
+
+5.  Place into to 'opt' directory in file system.  Change 'opt' ownership from root to kali.
+		
+		ls -la /opt
+		sudo chown kali:kali /opt
+
+6.  Now move into 'opt' directory.
+		
+		cd /opt
+
+7.  Move download Bloodhound file into 'opt' directory.
+
+		mv ~/Downloads/BloodHound-linux-x64.zip .
+
+8.  Unzip Bloodhound file with:
+		
+		unzip BloodHound-linux-x64.zip
+
+9.	Move Bloodhound into it's own directory.
+	
+		mv Bloodhound-linux-x65 bloodhound
+
+10. Move into the bloodhound directory and make the Bloodhound binary an executable.
+	
+		chmod +x ./BloodHound
+
+11. Now you dot slash Bloodhound.
+
+		./BloodHound
+
+12. Bloodhound should be started.  However, you'll need to change Neo4j passwords. So in a browser, type 'localhost:xxxx' where x is the number after localhost.
+
+13. Enter the username 'neo4j' and the password 'neo4j' to get to the change password screen.  Change the password.
+
+14. Go back to the Bloodhound login screen and enter your new password.
+
+15. The Bloodhound install assumes the the Bloodhound ingestor (collector) has been installed.  If the ingestor is not installed, you must install it using:
+
+	pip install bloodhound
+
+16. Bloodhound has been installed into '/home/kali/.local/bin' directory.  This must be added to $PATH by adding to your ~/.zshrc file:
+	
+	Add the following at the very end of the .zshrc file:
+
+		export PATH="$PATH:/home/kali/.local/bin"
+
+	Save and close. Open a new terminal OR use the same terminal by invoking 'source ~/.zshrc' command.
+
+17. Open '/etc/hosts' file and add the domain controller to the file.
+	
+		192.168.0.155     dc-1.xyz.local
+
+	and also add to '/etc/resolv.conf' the domain server:
+
+		nameserver 192.168.0.155
+
+18. Now you should be able to start Bloodhound
+
+		bloodhound-python -u flee -p monkey -dc dc-1.xyz.local --disable-autogc -d xyz.local
+
